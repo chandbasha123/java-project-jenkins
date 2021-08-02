@@ -1,0 +1,49 @@
+pipeline
+{
+    agent any
+    stages
+    {
+        stage('ContinuesDownload')
+        {
+            steps
+            {
+             git 'https://github.com/chandbasha123/java-project-jenkins.git'   
+            }
+        }
+        stage('ContinuesBuild')
+        {
+            steps
+            {
+             sh 'mvn package'   
+            }
+        }
+        stage('ContinuesDeployment')
+        {
+            steps
+            {
+            sh 'scp /home/ubuntu/.jenkins/workspace/DeclarativePipeline/webapp/target/webapp.war ubuntu@192.168.1.50:/var/lib/tomcat8/webapps/myqawebapp.war'
+            }
+        }
+        stage('ContinuesTesting')
+        {
+            steps
+            {
+             git 'https://github.com/selenium-saikrishna/FunctionalTesting.git'
+             sh 'java -jar /home/ubuntu/.jenkins/workspace/DeclarativePipeline/testing.jar'
+             
+            }
+        }
+    }
+    post
+      {
+         success
+         {
+         input message: 'Waiting for Approval', submitter: 'basha'
+         sh 'scp /home/ubuntu/.jenkins/workspace/DeclarativePipeline/webapp/target/webapp.war ubuntu@192.168.1.252:/var/lib/tomcat8/webapps/mywebapp2.war'
+          }
+         failure  
+         {
+         mail bcc: '', body: '', cc: '', from: '', replyTo: '', subject: 'Jenkins job failed', to: 'chandbashaaws@gmail.com'
+         }
+       }
+}
